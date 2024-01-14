@@ -11,56 +11,56 @@ function isRoot() {
 	fi
 }
 
-function checkVirt() {
-	if [ "$(systemd-detect-virt)" == "openvz" ]; then
-		echo "OpenVZ is not supported"
-		exit 1
-	fi
+# function checkVirt() {
+# 	if [ "$(systemd-detect-virt)" == "openvz" ]; then
+# 		echo "OpenVZ is not supported"
+# 		exit 1
+# 	fi
 
-	if [ "$(systemd-detect-virt)" == "lxc" ]; then
-		echo "LXC is not supported (yet)."
-		echo "WireGuard can technically run in an LXC container,"
-		echo "but the kernel module has to be installed on the host,"
-		echo "the container has to be run with some specific parameters"
-		echo "and only the tools need to be installed in the container."
-		exit 1
-	fi
-}
+# 	if [ "$(systemd-detect-virt)" == "lxc" ]; then
+# 		echo "LXC is not supported (yet)."
+# 		echo "WireGuard can technically run in an LXC container,"
+# 		echo "but the kernel module has to be installed on the host,"
+# 		echo "the container has to be run with some specific parameters"
+# 		echo "and only the tools need to be installed in the container."
+# 		exit 1
+# 	fi
+# }
 
-function checkOS() {
-	# Check OS version
-	if [[ -e /etc/debian_version ]]; then
-		source /etc/os-release
-		OS="${ID}" # debian or ubuntu
-		if [[ ${ID} == "debian" || ${ID} == "raspbian" ]]; then
-			if [[ ${VERSION_ID} -ne 10 ]]; then
-				echo "Your version of Debian (${VERSION_ID}) is not supported. Please use Debian 10 Buster"
-				exit 1
-			fi
-		elif [[ ${ID} == "ubuntu" ]]; then
-			if [[ ${VERSION_ID%.*} -lt 16 ]]; then
-				echo "Your version of Ubuntu (${VERSION_ID}) is too low."
-				exit 1
-			fi
-		fi
-	else
-		echo "Looks like you aren't running this installer on a Debian, or Ubuntu"
-		exit 1
-	fi
-}
+# function checkOS() {
+# 	# Check OS version
+# 	if [[ -e /etc/debian_version ]]; then
+# 		source /etc/os-release
+# 		OS="${ID}" # debian or ubuntu
+# 		if [[ ${ID} == "debian" || ${ID} == "raspbian" ]]; then
+# 			if [[ ${VERSION_ID} -ne 10 ]]; then
+# 				echo "Your version of Debian (${VERSION_ID}) is not supported. Please use Debian 10 Buster"
+# 				exit 1
+# 			fi
+# 		elif [[ ${ID} == "ubuntu" ]]; then
+# 			if [[ ${VERSION_ID%.*} -lt 16 ]]; then
+# 				echo "Your version of Ubuntu (${VERSION_ID}) is too low."
+# 				exit 1
+# 			fi
+# 		fi
+# 	else
+# 		echo "Looks like you aren't running this installer on a Debian, or Ubuntu"
+# 		exit 1
+# 	fi
+# }
 
-function initialCheck() {
-	isRoot
-	checkVirt
-	checkOS
-}
+# function initialCheck() {
+# 	isRoot
+# 	checkVirt
+# 	checkOS
+# }
 
 function installQuestions() {
-	echo "Welcome to the WireGuard installer!"
-	echo "The git repository is available at: https://github.com/angristan/wireguard-install"
+	echo "Welcome to the WireGuard installer! Modded by dazeb"
+	echo "The git repository is available at: https://github.com/dazeb/wireguard-install"
 	echo ""
-	echo "I need to ask you a few questions before starting the setup."
-	echo "You can leave the default options and just press enter if you are ok with them."
+	echo ""
+	echo "JUST PRESS ENTER WE ARE FILLING THE IP VARIABLES FOR PORT FORWARDING"
 	echo ""
 
 	# Detect public IPv4 or IPv6 address and pre-fill for the user
@@ -88,7 +88,7 @@ function installQuestions() {
 	until [[ ${SERVER_WG_IPV6} =~ ^([a-f0-9]{1,4}:){3,4}: ]]; do
 		read -rp "Server's WireGuard IPv6: " -e -i fd42:42:42::1 SERVER_WG_IPV6
 	done
-
+	echo "Checking SSH"
 	# Check if ssh is in range
 	if [[ ${SSH_CLIENT##* } -eq 53 || ${SSH_CLIENT##* } -eq 80 || ${SSH_CLIENT##* } -eq 88 || ${SSH_CLIENT##* } -eq 500 || \
 		${SSH_CLIENT##* } -eq 53 || (${SSH_CLIENT##* } -ge 1023 && ${SSH_CLIENT##* } -le 65000 ) ]]; then
@@ -103,7 +103,7 @@ function installQuestions() {
 	until [[ ${SERVER_PORT} =~ ^[0-9]+$ && "${SERVER_PORT}" -ge 1 && "${SERVER_PORT}" -le 65535 && ${SERVER_PORT} -ne 65432 ]]; do
 		read -rp "Server's WireGuard port [1-65535]: " -e -i "${RANDOM_PORT}" SERVER_PORT
 	done
-
+	echo "Adding Adguard"
 	# Adguard DNS by default
 	until [[ ${CLIENT_DNS_1} =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
 		read -rp "First DNS resolver to use for the clients: " -e -i 94.140.14.14 CLIENT_DNS_1
@@ -130,13 +130,13 @@ function installWireGuard() {
 		apt-get update
 		apt-get install -y wireguard iptables resolvconf qrencode
 	elif [[ ${OS} == 'debian' ]]; then
-		if ! grep -rqs "^deb .* buster-backports" /etc/apt/; then
-			echo "deb http://deb.debian.org/debian buster-backports main" >/etc/apt/sources.list.d/backports.list
+		if ! grep -rqs "^deb .* bookworm-backports" /etc/apt/; then
+			echo "deb http://deb.debian.org/debian bookworm-backports main" >/etc/apt/sources.list.d/backports.list
 			apt-get update
 		fi
 		apt update
 		apt-get install -y iptables resolvconf qrencode
-		apt-get install -y -t buster-backports wireguard
+		apt-get install -y -t bookworm-backports wireguard
 	fi
 
 	# Make sure the directory exists (this does not seem the be the case on fedora)
@@ -291,38 +291,38 @@ net.ipv6.conf.all.forwarding = 1" >/etc/sysctl.d/wg.conf
 	fi
 }
 
-function uninstallWg() {
-	echo ""
-	read -rp "Do you really want to remove WireGuard? [y/n]: " -e -i n REMOVE
-	if [[ $REMOVE == 'y' ]]; then
+# function uninstallWg() {
+# 	echo ""
+# 	read -rp "Do you really want to remove WireGuard? [y/n]: " -e -i n REMOVE
+# 	if [[ $REMOVE == 'y' ]]; then
 
-		systemctl stop "wg-quick@${SERVER_WG_NIC}"
-		systemctl disable "wg-quick@${SERVER_WG_NIC}"
+# 		systemctl stop "wg-quick@${SERVER_WG_NIC}"
+# 		systemctl disable "wg-quick@${SERVER_WG_NIC}"
 
-		apt-get autoremove --purge -y wireguard qrencode
+# 		apt-get autoremove --purge -y wireguard qrencode
 
-		rm -rf /etc/wireguard
-		rm -f /etc/sysctl.d/wg.conf
+# 		rm -rf /etc/wireguard
+# 		rm -f /etc/sysctl.d/wg.conf
 
-		# Reload sysctl
-		sysctl --system
+# 		# Reload sysctl
+# 		sysctl --system
 
-		# Check if WireGuard is running
-		systemctl is-active --quiet "wg-quick@${SERVER_WG_NIC}"
-		WG_RUNNING=$?
+# 		# Check if WireGuard is running
+# 		systemctl is-active --quiet "wg-quick@${SERVER_WG_NIC}"
+# 		WG_RUNNING=$?
 
-		if [[ ${WG_RUNNING} -eq 0 ]]; then
-			echo "WireGuard failed to uninstall properly."
-			exit 1
-		else
-			echo "WireGuard uninstalled successfully."
-			exit 0
-		fi
-	else
-		echo ""
-		echo "Removal aborted!"
-	fi
-}
+# 		if [[ ${WG_RUNNING} -eq 0 ]]; then
+# 			echo "WireGuard failed to uninstall properly."
+# 			exit 1
+# 		else
+# 			echo "WireGuard uninstalled successfully."
+# 			exit 0
+# 		fi
+# 	else
+# 		echo ""
+# 		echo "Removal aborted!"
+# 	fi
+# }
 
 function manageMenu() {
 	echo "Welcome to WireGuard-install!"
@@ -333,7 +333,7 @@ function manageMenu() {
 	echo "What do you want to do?"
 	echo "   1) Stop WireGuard"
 	echo "   2) Restart WireGuard"
-	echo "   3) Uninstall WireGuard"
+	# echo "   3) Uninstall WireGuard"
 	echo "   4) Exit"
 	until [[ ${MENU_OPTION} =~ ^[1-4]$ ]]; do
 		read -rp "Select an option [1-4]: " MENU_OPTION
