@@ -1,4 +1,4 @@
-# WireGuard installer for Gaming
+# WireGuard installer for Gaming Edited by dazeb
 
 **This project is a bash script that aims to setup a [WireGuard](https://www.wireguard.com/) VPN that is specified for PERSONAL gaming or torrenting use. It supports only ONE client!**
 
@@ -76,7 +76,7 @@ Supported distributions:
 Download and execute the script. Answer the questions asked by the script and it will take care of the rest. For most VPS providers, you can just enter through all the questions.
 
 ```bash
-wget https://raw.githubusercontent.com/xiahualiu/wg_gaming_installer/main/wg-gaming-installer.sh 
+wget https://raw.githubusercontent.com/dazeb/wg_gaming_installer/main/wg-gaming-installer.sh 
 bash ./wg-gaming-installer.sh
 ```
 
